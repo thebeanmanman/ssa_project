@@ -7,7 +7,7 @@
     <p>Members:</p>
     <ul>
         {% for member in group.members.all %}
-        <li>{{ group.admin.profile.nickname }}</li>
+        <li>{{ member.profile.nickname }}</li>
         {% endfor %}
     </ul>
     <a href="{% url 'chipin:invite_users' group.id %}">Invite Users</a>
