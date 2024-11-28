@@ -67,25 +67,30 @@ def user_view(request):
 
 def user(request):
     profile = request.user.profile
+    transactions = Transaction.objects.all().filter(user=request.user).order_by('-created_at')
     return render(request, 'users/user.html', {
         'user': request.user,
-        'balance': profile.balance
+        'balance': profile.balance,
+        'transactions': transactions
     })
 
 @login_required
 def top_up(request):
     profile = request.user.profile
-    form = TopUpForm(request.POST)
+    if request.method == 'POST':
+        form = TopUpForm(request.POST)
+        if form.is_valid():
+            amount = form.cleaned_data['amount']
+            profile.balance += amount
+            profile.save()
+            Transaction.objects.create(user=request.user, amount=amount)
+            messages.success(request, f"Your balance has been topped up by ${amount}.")
+            return redirect('users:user')
+    else:
+        form = TopUpForm(None)
     context = {
         'form': form,
         'user_balance': request.user.profile.balance,
         'welcome_message': f"Welcome back, {request.user.first_name}!",
     }
-    if form.is_valid():
-        amount = form.cleaned_data['amount']
-        profile.balance += amount
-        profile.save()
-        Transaction.objects.create(user=request.user, amount=amount)
-        messages.success(request, f"Your balance has been topped up by ${amount}.")
-        return redirect('users:user')
     return render(request, 'users/top_up.html', context)
