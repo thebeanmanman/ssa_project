@@ -347,3 +347,18 @@ def delete_event(request, group_id, event_id):
     event.delete()
     messages.success(request, f"The event '{event.name}' has been deleted.")
     return redirect('chipin:group_detail', group_id=group.id)
+
+@login_required
+def transfer_funds(request, group_id, event_id):
+    group = get_object_or_404(Group, id=group_id)
+    event = get_object_or_404(Event, id=event_id, group=group)
+    if request.user != group.admin:
+        messages.error(request, "Only the group administrator can delete events.")
+        return redirect('chipin:group_detail', group_id=group.id)
+    
+    update_event_status(request, group_id, event_id)
+    # if event.check_status():
+    #     messages.success(request, f"The funds have been successfully been transferred.")
+    # else:
+    #     messages.error(request, "There are not enough funds")
+    return redirect('chipin:group_detail', group_id=group.id)
