@@ -12,7 +12,8 @@ import urllib.parse
 from .models import GroupJoinRequest
 from .models import Group, Comment
 from .forms import CommentForm
-
+from django.db import transaction
+from users.models import Transaction
 
 @login_required
 def home(request):
@@ -41,36 +42,6 @@ def create_group(request):
     else:
         form = GroupCreationForm(user=request.user)
     return render(request, 'chipin/create_group.html', {'form': form})
-
-@login_required
-def group_detail(request, group_id, edit_comment_id=None):
-    group = get_object_or_404(Group, id=group_id)
-    comments = group.comments.all().order_by('-created_at')  # Fetch all comments for the group
-    if edit_comment_id: # Fetch the comment to edit, if edit_comment_id is provided
-        comment_to_edit = get_object_or_404(Comment, id=edit_comment_id)
-        if comment_to_edit.user != request.user:
-            return redirect('chipin:group_detail', group_id=group.id)
-    else:
-        comment_to_edit = None
-    if request.method == 'POST':
-        if comment_to_edit: # Editing an existing comment
-            form = CommentForm(request.POST, instance=comment_to_edit)
-        else: # Adding a new comment
-            form = CommentForm(request.POST)
-        if form.is_valid():
-            comment = form.save(commit=False)
-            comment.user = request.user
-            comment.group = group
-            comment.save()
-            return redirect('chipin:group_detail', group_id=group.id)
-    else:
-        form = CommentForm(instance=comment_to_edit) if comment_to_edit else CommentForm()
-    return render(request, 'chipin/group_detail.html', {
-        'group': group,
-        'comments': comments,
-        'form': form,
-        'comment_to_edit': comment_to_edit,
-    })
 
 @login_required
 def delete_group(request, group_id):
@@ -207,6 +178,7 @@ from .models import Event
 def group_detail(request, group_id, edit_comment_id=None):
     group = get_object_or_404(Group, id=group_id)
     comments = group.comments.all().order_by('-created_at')  # Fetch all comments for the group
+    join_requests = group.join_requests.all().order_by('-created_at').filter(is_approved=False)
     events = group.events.all()  # Fetch all events associated with the group
     # Add a new comment or edit an existing comment
     if edit_comment_id: # Fetch the comment to edit, if edit_comment_id is provided
@@ -232,7 +204,8 @@ def group_detail(request, group_id, edit_comment_id=None):
     event_share_info = {}
     for event in events:
         event_share = event.calculate_share()
-        user_eligible = request.user.profile.max_spend >= event_share
+        extra_share = event.total_spend/(event.members.count()+1)
+        user_eligible = request.user.profile.max_spend >= extra_share
         user_has_joined = request.user in event.members.all()  # Check if the user has already joined the event
         event_share_info[event] = {
             'share': event_share,
@@ -248,6 +221,7 @@ def group_detail(request, group_id, edit_comment_id=None):
         'comment_to_edit': comment_to_edit,
         'events': events,
         'event_share_info': event_share_info,
+        'join_requests': join_requests,
     })
 
 @login_required
@@ -274,14 +248,17 @@ def create_event(request, group_id):
 def join_event(request, group_id, event_id):
     group = get_object_or_404(Group, id=group_id)
     event = get_object_or_404(Event, id=event_id, group=group)
-    event_share = event.calculate_share()  
+    extra_share = event.calculate_extra_share()  
     # Check if the user is eligible to join based on their max spend
-    if request.user.profile.max_spend < event_share:
+    if request.user.profile.max_spend < extra_share:
         messages.error(request, f"Your max spend of ${request.user.profile.max_spend} is too low to join this event.")
         return redirect('chipin:group_detail', group_id=group.id)
     # Check if the user has already joined the event
     if request.user in event.members.all():
         messages.info(request, "You have already joined this event.")
+        return redirect('chipin:group_detail', group_id=group.id)
+    elif event.status == 'Archived':
+        messages.error(request, "You cannot interact with archived events.")
         return redirect('chipin:group_detail', group_id=group.id)
     # Add the user to the event
     event.members.add(request.user)   
@@ -301,11 +278,15 @@ def update_event_status(request, group_id, event_id):
         messages.error(request, "Only the group administrator can update the event status.")
         return redirect('chipin:group_detail', group_id=group.id)
     # Calculate the share per member
-    event_share = event.calculate_share()
+    extra_share = event.calculate_extra_share()
     # Check if all members can afford the event share
-    sufficient_funds = True
-    for member in group.members.all():
-        if member.profile.max_spend < event_share:
+    
+    if event.members.all():
+        sufficient_funds = True
+    else:
+        sufficient_funds = False
+    for member in event.members.all():
+        if member.profile.max_spend < extra_share:
             sufficient_funds = False
             break
     # Update the event status based on the members' ability to cover the share
@@ -327,6 +308,9 @@ def leave_event(request, group_id, event_id):
     if request.user not in event.members.all():
         messages.error(request, "You are not a member of this event.")
         return redirect('chipin:group_detail', group_id=group.id)
+    elif event.status == 'Archived':
+        messages.error(request, "You cannot interact with archived events.")
+        return redirect('chipin:group_detail', group_id=group.id)
     # Remove the user from the event
     event.members.remove(request.user)
     messages.success(request, f"You have successfully left the event '{event.name}'.")
@@ -343,6 +327,9 @@ def delete_event(request, group_id, event_id):
     if request.user != group.admin:
         messages.error(request, "Only the group administrator can delete events.")
         return redirect('chipin:group_detail', group_id=group.id)
+    elif event.status == 'Archived':
+        messages.error(request, "You cannot delete archived events.")
+        return redirect('chipin:group_detail', group_id=group.id)
     # Delete the event
     event.delete()
     messages.success(request, f"The event '{event.name}' has been deleted.")
@@ -353,12 +340,29 @@ def transfer_funds(request, group_id, event_id):
     group = get_object_or_404(Group, id=group_id)
     event = get_object_or_404(Event, id=event_id, group=group)
     if request.user != group.admin:
-        messages.error(request, "Only the group administrator can delete events.")
-        return redirect('chipin:group_detail', group_id=group.id)
-    
-    update_event_status(request, group_id, event_id)
-    # if event.check_status():
-    #     messages.success(request, f"The funds have been successfully been transferred.")
-    # else:
-    #     messages.error(request, "There are not enough funds")
+        messages.error(request, "Only the group administrator can transfer funds.")
+    elif event.status == 'Pending':
+        messages.error(request, "The event status is still Pending. Try updating the status if there is enough funds.")
+    elif event.status == 'Archived':
+        messages.error(request, "Cannot transfer funds for an Archived event.")
+    if event.check_status():
+        if event.check_balances():
+            with transaction.atomic():
+                share = event.calculate_share()
+                for member in event.members.all():
+                    member_profile = member.profile
+                    member_profile.balance -= share
+                    Transaction.objects.create(user=member, amount=share*-1)
+                    member_profile.save()
+            
+                request.user.profile.balance += event.total_spend
+                Transaction.objects.create(user=request.user, amount=event.total_spend)
+                request.user.profile.save()
+                event.status = 'Archived'
+                messages.success(request, f"The funds have been successfully been transferred.")
+                event.save()
+        else:
+            messages.error(request, "There are not enough funds")
+    else:
+        messages.error(request, "There are not enough funds")
     return redirect('chipin:group_detail', group_id=group.id)

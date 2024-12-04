@@ -20,10 +20,6 @@ def register(request):
         form = UserRegistrationForm()
     return render(request, 'users/register.html', {'form': form})
 
-@login_required(login_url='users:login')
-def user(request):
-    return render(request, "users/user.html")
-
 def login_view(request):
     if request.method == "POST":
         username = request.POST.get("username")
@@ -65,6 +61,7 @@ def user_view(request):
     profile = request.user.profile  # Get the logged-in user's profile
     return render(request, 'users/user.html', {'balance': profile.balance})
 
+@login_required(login_url='users:login')
 def user(request):
     profile = request.user.profile
     transactions = Transaction.objects.all().filter(user=request.user).order_by('-created_at')

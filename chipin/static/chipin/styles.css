@@ -94,14 +94,28 @@ a:hover {
 }
 
 table, td, th {  
-    border: 1px solid #ddd;
+    border: 1px solid black;
     text-align: left;
   }  
+  
+th, td {
+    padding: 10px;
+}
 
 table {
-    border-collapse: collapse;
+    border-spacing: 0;
+    overflow-y: auto;
+    max-height: 300px;
+    display: block;
 }  
 
-th, td {
-    padding: 15px;
-  }
+td {
+    text-align: center;
+    position: sticky;
+    top: 0;
+    background: white;
+}
+
+.tablediv {
+    display: inline-block;
+}

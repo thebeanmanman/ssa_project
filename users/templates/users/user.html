@@ -1,5 +1,6 @@
 {% extends 'chipin/base.html' %}
 {% load static %}
+{% load mathfilters %}
 {% block title %}User Management{% endblock %}
 
 {% block content %} 
@@ -10,17 +11,25 @@
     <a href="{% url 'chipin:home' %}">Click through to ChipIn Functions</a>
     <h3>Your Transaction History:</h3>
     {%if transactions %}
-        <div>
+        <div class='tablediv'>
             <table>
-                <tr>
-                    <td>Amount </td>
-                    <td>Date</td>
-                </tr>
+                <thead>
+                    <tr>
+                        <td>Amount </td>
+                        <td>Date</td>
+                    </tr>
+                </thead>
                 {%for transaction in transactions %}
-                <tr>
-                    <th>${{ transaction.amount }}</th>
-                    <th>{{ transaction.created_at }}</th>
-                </tr>
+                <tbody>
+                    <tr>
+                        {% if transaction.amount >= 0 %}
+                            <th style='color:green;'>+${{ transaction.amount }}</th>
+                        {% else %}
+                            <th style='color:red;'>-${{ transaction.amount|abs }}</th>
+                        {% endif %}
+                        <th>{{ transaction.created_at }}</th>
+                    </tr>
+                </tbody>
                 {% endfor %}
             </table>
         </div>
