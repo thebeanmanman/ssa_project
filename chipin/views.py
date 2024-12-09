@@ -352,24 +352,25 @@ def transfer_funds(request, group_id, event_id):
         messages.error(request, "The event status is still Pending. Try updating the status if there is enough funds.")
     elif event.status == 'Archived': # This checks if the event status is archived and stops the funds from being transferred
         messages.error(request, "Cannot transfer funds for an Archived event.") # Provides feedback to the user
-    if event.check_status(): # This checks if all members' max spend can cover the event share and returns a boolean based on that
-        if event.check_balances(): # This checks if all members' balance can cover the event share
-            with transaction.atomic(): # This ensures that the transaction is atomic, meaning that all the transactions will be reverted if theres an error.
-                share = event.calculate_share() # Calculate the share per member
-                for member in event.members.all(): # Loop through all the members in the event
-                    member_profile = member.profile # Get the member's profile
-                    member_profile.balance -= share # Decrease the member's balance by the share
-                    Transaction.objects.create(user=member, amount=share*-1, reason=f"Funds transferred to {event.name}") # Create a transaction which shows that the members balance decreases
-                    member_profile.save() # Save the member's profile
-            
-                request.user.profile.balance += event.total_spend # Increase the group admin's balance by the total spend
-                Transaction.objects.create(user=request.user, amount=event.total_spend, reason=f"Recieved funds funds from {event.name}") # Create a transaction which shows that the group admin's balance increases
-                request.user.profile.save() # Save the group admin's profile
-                event.status = 'Archived' # Sets the event status to "Archived"
-                messages.success(request, "The funds have been successfully been transferred.") # Provides feedback to the user that the funds have been transferred
-                event.save() # Save the event
+    else:
+        if event.check_status(): # This checks if all members' max spend can cover the event share and returns a boolean based on that
+            if event.check_balances(): # This checks if all members' balance can cover the event share
+                with transaction.atomic(): # This ensures that the transaction is atomic, meaning that all the transactions will be reverted if theres an error.
+                    share = event.calculate_share() # Calculate the share per member
+                    for member in event.members.all(): # Loop through all the members in the event
+                        member_profile = member.profile # Get the member's profile
+                        member_profile.balance -= share # Decrease the member's balance by the share
+                        Transaction.objects.create(user=member, amount=share*-1, reason=f"Funds transferred to {event.name}") # Create a transaction which shows that the members balance decreases
+                        member_profile.save() # Save the member's profile
+                
+                    request.user.profile.balance += event.total_spend # Increase the group admin's balance by the total spend
+                    Transaction.objects.create(user=request.user, amount=event.total_spend, reason=f"Recieved funds funds from {event.name}") # Create a transaction which shows that the group admin's balance increases
+                    request.user.profile.save() # Save the group admin's profile
+                    event.status = 'Archived' # Sets the event status to "Archived"
+                    messages.success(request, "The funds have been successfully been transferred.") # Provides feedback to the user that the funds have been transferred
+                    event.save() # Save the event
+            else:
+                messages.error(request, "There are not enough funds") # Provides feedback to the user that there are not enough funds
         else:
             messages.error(request, "There are not enough funds") # Provides feedback to the user that there are not enough funds
-    else:
-        messages.error(request, "There are not enough funds") # Provides feedback to the user that there are not enough funds
     return redirect('chipin:group_detail', group_id=group.id) # Redirects the user back to the group detail page
