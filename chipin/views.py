@@ -188,16 +188,20 @@ def group_detail(request, group_id, edit_comment_id=None):
     else:
         comment_to_edit = None
     if request.method == 'POST':
-        if comment_to_edit: # Editing an existing comment
-            form = CommentForm(request.POST, instance=comment_to_edit)
-        else: # Adding a new comment
-            form = CommentForm(request.POST)
-        if form.is_valid():
-            comment = form.save(commit=False)
-            comment.user = request.user
-            comment.group = group
-            comment.save()
-            return redirect('chipin:group_detail', group_id=group.id)
+        if request.user in group.members.all():
+            if comment_to_edit: # Editing an existing comment
+                form = CommentForm(request.POST, instance=comment_to_edit)
+            else: # Adding a new comment
+                form = CommentForm(request.POST)
+            if form.is_valid():
+                comment = form.save(commit=False)
+                comment.user = request.user
+                comment.group = group
+                comment.save()
+                return redirect('chipin:group_detail', group_id=group.id)
+        else:
+            messages.error(request, "You are not a member of this group.")
+            form = CommentForm()
     else:
         form = CommentForm(instance=comment_to_edit) if comment_to_edit else CommentForm()
     # Calculate event share for each event and check user eligibility
@@ -250,6 +254,9 @@ def join_event(request, group_id, event_id):
     event = get_object_or_404(Event, id=event_id, group=group)
     extra_share = event.calculate_extra_share()  
     # Check if the user is eligible to join based on their max spend
+    if request.user not in group.members.all():
+        messages.error(request, "You are not a member of this group.")
+        return redirect('chipin:group_detail', group_id=group.id)
     if request.user.profile.max_spend < extra_share:
         messages.error(request, f"Your max spend of ${request.user.profile.max_spend} is too low to join this event.")
         return redirect('chipin:group_detail', group_id=group.id)
