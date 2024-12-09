@@ -103,7 +103,7 @@ th, td {
     text-align: left; /* Aligns the text to the left */
 }
 
-th {
+td {
     border-left: 0.5px solid black; /* Separates the table headers by a border */
     font-weight: normal; /* Sets the font weight to normal */
 }
@@ -115,34 +115,33 @@ table {
     display: block; /* Displays the table as a block */
 }  
 
-td {
-    text-align: left; /* Aligns the text in the table to the left */
-    position: sticky;
-    top: 0;
-    background-color: #ececec;
+th {
+    position: sticky; /* Makes the table headers stick to the top when scrolling */
+    top: 0; /* Positions the table headers at the top of the table */
+    background-color: #ececec; /* Sets the background color of the table headers to contrast with the table body*/
 }
 
 table, .tablediv {
-    border: 1px solid black;
+    border: 1px solid black; /* Adds a border to the outside of the table */
 }
 
 .tablediv {
-    display: inline-block;
+    display: inline-block; /* Reduces the tables width to only fit the content */
 }
 
-.positivetransaction {
+.positivetransaction { /* Sets the styling for positive transactions */
     color:#4cda4c;
     font-weight: bold;
 }
 
-.negativetransaction {
+.negativetransaction { /* Sets the styling for positive transactions */
     color: #f15454;
     font-weight: bold;
 }
 
 /* Link button styling */
 
-a.button1 {
+a.button1 { /* Regular styling for button1 */
     color: white;
     text-decoration: none;
     padding: 10px 15px;
@@ -153,12 +152,12 @@ a.button1 {
     display: inline-block;
 }
 
-a.button1:hover {
+a.button1:hover { /* Styling for when button1 is hovered over */
     background-color: #218838;
     font-weight: normal;
 }
 
-a.button2 {
+a.button2 { /* Regular styling for button2 */
     color: #28a745;
     text-decoration: none;
     padding: 9px 14px;
@@ -170,12 +169,12 @@ a.button2 {
     display: inline-block;
 }
 
-a.button2:hover {
+a.button2:hover { /* Styling for when button2 is hovered over */
     color: #218838;
     border: 1px solid #218838;
     font-weight: normal;
 }
-a.button3 {
+a.button3 { /* Regular styling for button3 */
     color: #007BFF;
     text-decoration: none;
     padding: 6px 12px;
@@ -187,7 +186,7 @@ a.button3 {
     display: inline-block;
 }
 
-a.button3:hover {
+a.button3:hover { /* Styling for when button3 is hovered over */
     color: #0056b3;
     border: 1px solid #0056b3;
     font-weight: normal;
@@ -195,8 +194,7 @@ a.button3:hover {
 
 
 
-/* Scrollbar styling */
-
+/* Custom scrollbar styling */
 ::-webkit-scrollbar {
     width: 10px;
   }

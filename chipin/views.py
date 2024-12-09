@@ -345,7 +345,7 @@ def transfer_funds(request, group_id, event_id):
         messages.error(request, "The event status is still Pending. Try updating the status if there is enough funds.")
     elif event.status == 'Archived': # This checks if the event status is archived and stops the funds from being transferred
         messages.error(request, "Cannot transfer funds for an Archived event.") # Provides feedback to the user
-    if event.check_status(): # This checks if all members' max spend can cover the event share 
+    if event.check_status(): # This checks if all members' max spend can cover the event share and returns a boolean based on that
         if event.check_balances(): # This checks if all members' balance can cover the event share
             with transaction.atomic(): # This ensures that the transaction is atomic, meaning that all the transactions will be reverted if theres an error.
                 share = event.calculate_share() # Calculate the share per member

@@ -29,7 +29,7 @@
                             <td class='negativetransaction'>-${{ transaction.amount|abs }}</td> {% comment %} Displays the transaction amount as a postive to remove the '-' sign after the '$' sign. Then places a '-' sign before the '$' with custom styling {% endcomment %}
                         {% endif %}
                         <td>{{ transaction.reason }}</td> {% comment %} Displays the reason stored in the transaction model {% endcomment %}
-                        <th>{{ transaction.created_at }}</th> {% comment %} Displays the date when the transaction was made, stored in the transaction model {% endcomment %}
+                        <td>{{ transaction.created_at }}</td> {% comment %} Displays the date when the transaction was made, stored in the transaction model {% endcomment %}
                     </tr>
                 </tbody>
                 {% endfor %}
