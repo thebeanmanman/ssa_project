@@ -61,33 +61,33 @@ def user_view(request):
     profile = request.user.profile  # Get the logged-in user's profile
     return render(request, 'users/user.html', {'balance': profile.balance})
 
-@login_required(login_url='users:login')
+@login_required(login_url='users:login') # Redirects the user to the login page if they are not logged in
 def user(request):
-    profile = request.user.profile
-    transactions = Transaction.objects.all().filter(user=request.user).order_by('-created_at')
-    return render(request, 'users/user.html', {
+    profile = request.user.profile # Gets the currently logged in users profile
+    transactions = Transaction.objects.all().filter(user=request.user).order_by('-created_at') # Gets the queryset of all the transactions for the currently logged in user and sorts them by date
+    return render(request, 'users/user.html', { # Renders the user.html template with the provided variables
         'user': request.user,
         'balance': profile.balance,
         'transactions': transactions
     })
 
 @login_required
-def top_up(request):
-    profile = request.user.profile
-    if request.method == 'POST':
-        form = TopUpForm(request.POST)
-        if form.is_valid():
-            amount = form.cleaned_data['amount']
-            profile.balance += amount
-            profile.save()
-            Transaction.objects.create(user=request.user, amount=amount)
-            messages.success(request, f"Your balance has been topped up by ${amount}.")
-            return redirect('users:user')
+def top_up(request): # Logic for the top_up page
+    profile = request.user.profile # Gets the currently logged in users profile
+    if request.method == 'POST': # Checks if the form has been submitted
+        form = TopUpForm(request.POST) # Creates the form for the user to interact with
+        if form.is_valid(): # Checks if the form is valid
+            amount = form.cleaned_data['amount'] # Gets the amount to top up from the form
+            profile.balance += amount # Adds the amount to the users balance
+            profile.save() # Saves the updated balance
+            Transaction.objects.create(user=request.user, amount=amount, reason="Topped up balance") # Creates a transaction to show the top up
+            messages.success(request, f"Your balance has been topped up by ${amount}.") # Provides feedback to the user that their balance has been topped up
+            return redirect('users:user') # Redirects the user to the user page
     else:
-        form = TopUpForm(None)
-    context = {
-        'form': form,
+        form = TopUpForm() # Creates the form for the user without a POST request
+    context = { # Defines the variables that top_up.html has access to
+        'form': form, 
         'user_balance': request.user.profile.balance,
         'welcome_message': f"Welcome back, {request.user.first_name}!",
     }
-    return render(request, 'users/top_up.html', context)
+    return render(request, 'users/top_up.html', context) # Renders the top_up.html template with the provided variables from context

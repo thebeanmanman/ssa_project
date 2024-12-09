@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
+import math
 
 class Group(models.Model):
     name = models.CharField(max_length=100)
@@ -33,16 +34,21 @@ class Event(models.Model):
     total_spend = models.DecimalField(max_digits=10, decimal_places=2)
     status = models.CharField(max_length=20, default='Pending')  # Can be 'Pending' or 'Active'
     group = models.ForeignKey(Group, related_name='events', on_delete=models.CASCADE)
-    members = models.ManyToManyField(User, related_name='event_memberships', blank=True)  
+    members = models.ManyToManyField(User, related_name='event_memberships', blank=True)
 
     def calculate_share(self):
         members_count = self.members.count()
         if members_count == 0:
             return 0
         return round(self.total_spend / members_count,2) # Calculates each share of a member by dividing the total spend by member count. Then it is rounded to 2DP to ensure no errors in transactions 
-    def calculate_extra_share(self):
-        members_count = self.members.count()+1
-        return round(self.total_spend / members_count,2)
+        # print(self.total_spend)
+        # print(type(self.total_spend))
+        # result = math.ceil(self.total_spend / members_count * 100) / 100
+        # print(type(result))
+        # return result # Calculates each share of a member by dividing the total spend by member count. Then it is rounded to 2DP to ensure no errors in transactions 
+    def calculate_extra_share(self): # Calculates the share that would be given to the user if they joined the event. This allows for checking if the user has enough funds to join.
+        members_count = self.members.count()+1 # Accounts for the extra member in the group
+        return round(self.total_spend / members_count,2) # Gets the new share price by using the extra member
     def check_status(self):
         """ Check if all members' max spend can cover the event. """
         share = self.calculate_share()
@@ -51,9 +57,9 @@ class Event(models.Model):
                 return False
         return True
     
-    def check_balances(self):
-        share = self.calculate_share()
-        for member in self.members.all():
-            if member.profile.balance < share:
-                return False
-        return True
+    def check_balances(self): # Checks if all members balance can cover the event cost
+        share = self.calculate_share() # Calculates the share for the event
+        for member in self.members.all(): # Loops through all the members in the event
+            if member.profile.balance < share: # Checks if the members balance is less than the share
+                return False # Returns false if one of the members balance is less than the share
+        return True # Returns true if all members' balance can cover the event

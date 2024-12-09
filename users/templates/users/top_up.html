@@ -3,11 +3,11 @@
 {% block title %}Top Up{% endblock %}
 
 {% block content %} 
-    <h2>{{ welcome_message }}</h2>
-    <p>Your current balance is: ${{ user_balance }}</p>
-    <form method="post">
-        {% csrf_token %}
-        {{ form.as_p }}
-        <button type="submit">Top Up</button>
+    <h2>{{ welcome_message }}</h2> {% comment %} Displays the welcome message provided by the top_up view {% endcomment %}
+    <p>Your current balance is: ${{ user_balance }}</p> {% comment %} Shows the user their current balance {% endcomment %}
+    <form method="post"> {% comment %} Creates the Top Up form {% endcomment %}
+        {% csrf_token %} {% comment %} Ensures the form is safe from CSRF by checking the users current CSRF token{% endcomment %}
+        {{ form.as_p }} {% comment %} Uses the form created by the top_up view {% endcomment %}
+        <button type="submit">Top Up</button> {% comment %} Button to allow the user to submit their top up amount {% endcomment %}
     </form>
 {% endblock %}

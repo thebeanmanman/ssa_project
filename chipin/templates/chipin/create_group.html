@@ -8,6 +8,6 @@
         {% csrf_token %}
         {{ form.as_p }}
         <button type="submit">Create Group</button>
+        <a href="{% url 'chipin:home' %}" class="button2">Back to Homepage</a>
     </form>
-    <a href="{% url 'chipin:home' %}">Back to Homepage</a>
 {% endblock %}

@@ -41,7 +41,8 @@ class Profile(models.Model):
     def __str__(self):
         return self.user.username
 
-class Transaction(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    amount = models.DecimalField(max_digits=10, decimal_places=2)
-    created_at = models.DateTimeField(auto_now_add=True)
+class Transaction(models.Model): # Model used to track transactions made by users 
+    user = models.ForeignKey(User, on_delete=models.CASCADE) # Specifies which user made the transaction
+    amount = models.DecimalField(max_digits=10, decimal_places=2) # Specifies the amount of the transaction correct to 2 decimal places because it is a currency
+    created_at = models.DateTimeField(auto_now_add=True) # Specifies the date and time when the transaction was made
+    reason = models.CharField(max_length=100,default="Unknown") # Specifies the reason for the transaction

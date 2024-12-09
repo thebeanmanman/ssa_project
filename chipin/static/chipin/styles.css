@@ -84,38 +84,136 @@ button:hover {
 
 /* Basic styling for links */
 a {
-    color: #007BFF;
+    color: #28a745;
     text-decoration: none;
     padding: 5px
 }
 
 a:hover {
-    text-decoration: underline;
+    color: #218838;
+    font-weight: bold;
+    font-size: 15px;
 }
 
-table, td, th {  
-    border: 1px solid black;
-    text-align: left;
-  }  
-  
+/* Table styling */
+
 th, td {
-    padding: 10px;
+    padding: 10px; /* Gives the table extra spacing */
+    border-bottom: 0.5px solid black; /* Separates the table rows by a border */
+    text-align: left; /* Aligns the text to the left */
+}
+
+th {
+    border-left: 0.5px solid black; /* Separates the table headers by a border */
+    font-weight: normal; /* Sets the font weight to normal */
 }
 
 table {
-    border-spacing: 0;
-    overflow-y: auto;
-    max-height: 300px;
-    display: block;
+    border-spacing: 0; /* Removes the spacing between borders in the table */
+    overflow-y: auto; /* Adds a scrollbar to the table if it goes over the max height */
+    max-height: 300px; /* Sets the maximum height of the table */
+    display: block; /* Displays the table as a block */
 }  
 
 td {
-    text-align: center;
+    text-align: left; /* Aligns the text in the table to the left */
     position: sticky;
     top: 0;
-    background: white;
+    background-color: #ececec;
+}
+
+table, .tablediv {
+    border: 1px solid black;
 }
 
 .tablediv {
     display: inline-block;
+}
+
+.positivetransaction {
+    color:#4cda4c;
+    font-weight: bold;
+}
+
+.negativetransaction {
+    color: #f15454;
+    font-weight: bold;
+}
+
+/* Link button styling */
+
+a.button1 {
+    color: white;
+    text-decoration: none;
+    padding: 10px 15px;
+    background-color: #28a745;
+    border-radius: 5px;
+    margin: 5px 10px 5px 0px;
+    font-size: 14px;
+    display: inline-block;
+}
+
+a.button1:hover {
+    background-color: #218838;
+    font-weight: normal;
+}
+
+a.button2 {
+    color: #28a745;
+    text-decoration: none;
+    padding: 9px 14px;
+    background-color: white;
+    border-radius: 5px;
+    margin: 5px 10px 5px 0px;
+    font-size: 14px;
+    border: 1px solid #28a745;
+    display: inline-block;
+}
+
+a.button2:hover {
+    color: #218838;
+    border: 1px solid #218838;
+    font-weight: normal;
+}
+a.button3 {
+    color: #007BFF;
+    text-decoration: none;
+    padding: 6px 12px;
+    background-color: white;
+    border-radius: 5px;
+    margin: 5px 10px 5px 10px;
+    font-size: 14px;
+    border: 1px solid #007BFF;
+    display: inline-block;
+}
+
+a.button3:hover {
+    color: #0056b3;
+    border: 1px solid #0056b3;
+    font-weight: normal;
+}
+
+
+
+/* Scrollbar styling */
+
+::-webkit-scrollbar {
+    width: 10px;
+  }
+  
+::-webkit-scrollbar-track {
+    background: transparent ;
+  }
+  
+::-webkit-scrollbar-thumb {
+    background: #a8a8a8;
+  }
+  
+::-webkit-scrollbar-thumb:hover {
+    background: #777;
+  }
+
+/* Font styling (For all text)*/
+html {
+    font-family: 'Segoe UI', 'Tahoma', 'Geneva', Verdana, sans-serif;
 }

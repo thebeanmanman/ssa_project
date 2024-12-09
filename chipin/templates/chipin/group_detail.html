@@ -6,7 +6,7 @@
 
     <!-- Only display "Invite Users" link to the group administrator -->
     {% if request.user == group.admin %}
-        <a href="{% url 'chipin:invite_users' group.id %}">Invite Users</a>
+        <a href="{% url 'chipin:invite_users' group.id %}" class="button1">Invite Users</a>
     {% endif %}
 
     <h2>Members</h2>
@@ -18,7 +18,7 @@
 
     <!-- Only show "Request to Join" button for non-members -->
     {% if request.user not in group.members.all %}
-        <a href="{% url 'chipin:request_to_join_group' group.id %}">Request to Join</a>
+        <a href="{% url 'chipin:request_to_join_group' group.id %}" class='button1'>Request to Join</a>
     {% endif %}
 
     <h2>Join Requests</h2>
@@ -37,7 +37,7 @@
     <h2>Group Events</h2>
     <!-- Only display "Create New Event" link to the group administrator -->
     {% if request.user == group.admin %}
-        <a href="{% url 'chipin:create_event' group.id %}" class="btn btn-primary">Create New Event</a>
+        <a href="{% url 'chipin:create_event' group.id %}" class="btn btn-primary button1">Create New Event</a>
     {% endif %}
         <ul>
         {% for event, info in event_share_info.items %}
@@ -63,9 +63,9 @@
                 <!-- Only display the "Delete Event" link if the user is the group admin -->
                     {% if request.user == group.admin%}
                         <a href="{% url 'chipin:delete_event' group.id event.id %}" class="btn btn-danger" onclick="return confirm('Are you sure you want to delete this event?');">Delete Event</a>
-                        <a href="{% url 'chipin:update_event_status' group.id event.id %}" class="btn btn-danger">Update Status</a>
+                        <a href="{% url 'chipin:update_event_status' group.id event.id %}" class="btn btn-danger">Update Status</a> {% comment %} This button is only shown for events that aren't archived and if the user is an admin. This button redirects the admin to the update_event_status view, which checks the balances {% endcomment %}
                         {% if event.status == 'Active'%}
-                            <a href="{% url 'chipin:transfer_funds' group.id event.id %}" class="btn btn-danger" onclick="return confirm('Are you sure you want to transfer the funds?');">Transfer Funds</a>
+                            <a href="{% url 'chipin:transfer_funds' group.id event.id %}" class="btn btn-danger" onclick="return confirm('Are you sure you want to transfer the funds?');">Transfer Funds</a> {% comment %} This button is only show for events that have the 'Active' status and if the user is an admin. This button redirects the admin to the transfer_funds view, which transfers funds to the admin {% endcomment %}
                         {% endif %}
                     {% endif %}
                 {%endif%}

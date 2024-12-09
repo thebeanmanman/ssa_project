@@ -204,8 +204,8 @@ def group_detail(request, group_id, edit_comment_id=None):
     event_share_info = {}
     for event in events:
         event_share = event.calculate_share()
-        extra_share = event.total_spend/(event.members.count()+1)
-        user_eligible = request.user.profile.max_spend >= extra_share
+        extra_share = event.calculate_extra_share()
+        user_eligible = request.user.profile.max_spend >= extra_share and request.user.profile.balance >= extra_share # Check if the user has enough funds/max spend to be eligible to join the event
         user_has_joined = request.user in event.members.all()  # Check if the user has already joined the event
         event_share_info[event] = {
             'share': event_share,
@@ -337,32 +337,32 @@ def delete_event(request, group_id, event_id):
 
 @login_required
 def transfer_funds(request, group_id, event_id):
-    group = get_object_or_404(Group, id=group_id)
-    event = get_object_or_404(Event, id=event_id, group=group)
-    if request.user != group.admin:
-        messages.error(request, "Only the group administrator can transfer funds.")
-    elif event.status == 'Pending':
+    group = get_object_or_404(Group, id=group_id) # Get the current group using its ID
+    event = get_object_or_404(Event, id=event_id, group=group) # Get the event using its ID and Group
+    if request.user != group.admin: # This ensures only the group admin can transfer funds
+        messages.error(request, "Only the group administrator can transfer funds.") # Provides feedback to the user
+    elif event.status == 'Pending': # This checks if the event status is still pending and stops the funds from being transferred
         messages.error(request, "The event status is still Pending. Try updating the status if there is enough funds.")
-    elif event.status == 'Archived':
-        messages.error(request, "Cannot transfer funds for an Archived event.")
-    if event.check_status():
-        if event.check_balances():
-            with transaction.atomic():
-                share = event.calculate_share()
-                for member in event.members.all():
-                    member_profile = member.profile
-                    member_profile.balance -= share
-                    Transaction.objects.create(user=member, amount=share*-1)
-                    member_profile.save()
+    elif event.status == 'Archived': # This checks if the event status is archived and stops the funds from being transferred
+        messages.error(request, "Cannot transfer funds for an Archived event.") # Provides feedback to the user
+    if event.check_status(): # This checks if all members' max spend can cover the event share 
+        if event.check_balances(): # This checks if all members' balance can cover the event share
+            with transaction.atomic(): # This ensures that the transaction is atomic, meaning that all the transactions will be reverted if theres an error.
+                share = event.calculate_share() # Calculate the share per member
+                for member in event.members.all(): # Loop through all the members in the event
+                    member_profile = member.profile # Get the member's profile
+                    member_profile.balance -= share # Decrease the member's balance by the share
+                    Transaction.objects.create(user=member, amount=share*-1, reason=f"Funds transferred to {event.name}") # Create a transaction which shows that the members balance decreases
+                    member_profile.save() # Save the member's profile
             
-                request.user.profile.balance += event.total_spend
-                Transaction.objects.create(user=request.user, amount=event.total_spend)
-                request.user.profile.save()
-                event.status = 'Archived'
-                messages.success(request, f"The funds have been successfully been transferred.")
-                event.save()
+                request.user.profile.balance += event.total_spend # Increase the group admin's balance by the total spend
+                Transaction.objects.create(user=request.user, amount=event.total_spend, reason=f"Recieved funds funds from {event.name}") # Create a transaction which shows that the group admin's balance increases
+                request.user.profile.save() # Save the group admin's profile
+                event.status = 'Archived' # Sets the event status to "Archived"
+                messages.success(request, "The funds have been successfully been transferred.") # Provides feedback to the user that the funds have been transferred
+                event.save() # Save the event
         else:
-            messages.error(request, "There are not enough funds")
+            messages.error(request, "There are not enough funds") # Provides feedback to the user that there are not enough funds
     else:
-        messages.error(request, "There are not enough funds")
-    return redirect('chipin:group_detail', group_id=group.id)
+        messages.error(request, "There are not enough funds") # Provides feedback to the user that there are not enough funds
+    return redirect('chipin:group_detail', group_id=group.id) # Redirects the user back to the group detail page

@@ -7,33 +7,35 @@
     <h2>Welcome {{ request.user.first_name }}</h2>
     <p>This page is for user management functions.</p>
     <p><b>Your current balance is</b> ${{ balance }}</p>
-    <a href="{% url 'users:top_up' %}">Top Up Balance</a>
-    <a href="{% url 'chipin:home' %}">Click through to ChipIn Functions</a>
+    <a href="{% url 'users:top_up' %}" class="button1">Top Up Balance</a>
+    <a href="{% url 'chipin:home' %}" class="button2">Click through to ChipIn Functions</a>
     <h3>Your Transaction History:</h3>
-    {%if transactions %}
-        <div class='tablediv'>
-            <table>
-                <thead>
-                    <tr>
-                        <td>Amount </td>
-                        <td>Date</td>
+    {%if transactions %} {% comment %} Checks whether the user has any transactions {% endcomment %}
+        <div class='tablediv'> {% comment %} Creates a div around the table allowing for additional styling, such as shrinking the width of the table {% endcomment %}
+            <table> 
+                <thead> {% comment %} Indicates that this contains the headers of the table {% endcomment %}
+                    <tr> {% comment %} Creates a row to contain the headers of the table {% endcomment %}
+                        <th>Amount </th> {% comment %} Collumn which will contain the transcation amount {% endcomment %}
+                        <th>Reason</th> {% comment %} Collumn which will contain the reason the transaction was made {% endcomment %}
+                        <th>Date</th> {% comment %} Collumn which will contain the date the transaction was made {% endcomment %}
                     </tr>
                 </thead>
-                {%for transaction in transactions %}
-                <tbody>
-                    <tr>
-                        {% if transaction.amount >= 0 %}
-                            <th style='color:green;'>+${{ transaction.amount }}</th>
-                        {% else %}
-                            <th style='color:red;'>-${{ transaction.amount|abs }}</th>
+                {%for transaction in transactions %} {% comment %} Iterates over the queryset that contains all the users transactions {% endcomment %}
+                <tbody> {% comment %} Indicates that this contains the data of the table {% endcomment %}
+                    <tr> {% comment %} Creates a row to contain the data of the table {% endcomment %}
+                        {% if transaction.amount >= 0 %} {% comment %} If the transaction amount is positive, then it will recieve custom styling and a '+' sign to indicate this {% endcomment %}
+                            <td class='positivetransaction'>+${{ transaction.amount }}</td> {% comment %} Displays the transaction amount with the custom styling and a '+' sign {% endcomment %}
+                        {% else %} {% comment %} If the transaction amount is negative, then it will recieve custom styling and a '-' sign to indicate this {% endcomment %}
+                            <td class='negativetransaction'>-${{ transaction.amount|abs }}</td> {% comment %} Displays the transaction amount as a postive to remove the '-' sign after the '$' sign. Then places a '-' sign before the '$' with custom styling {% endcomment %}
                         {% endif %}
-                        <th>{{ transaction.created_at }}</th>
+                        <td>{{ transaction.reason }}</td> {% comment %} Displays the reason stored in the transaction model {% endcomment %}
+                        <th>{{ transaction.created_at }}</th> {% comment %} Displays the date when the transaction was made, stored in the transaction model {% endcomment %}
                     </tr>
                 </tbody>
                 {% endfor %}
             </table>
         </div>
-    {% else %}
+    {% else %} {% comment %} If the user has no transactions, the table isn't displayed and is replaced with feedback to the user {% endcomment %}
         <p>No transactions to display.</p>
     {% endif %}
 {% endblock %}

@@ -28,14 +28,14 @@ class UserRegistrationForm(UserCreationForm):
         return user
 
 class TopUpForm(forms.Form):
-    amount = forms.DecimalField(min_value=0.00,
-                                decimal_places=2,
-                                max_digits=5,
-                                error_messages={
+    amount = forms.DecimalField(min_value=0.00, # Creates the field for the user to enter the amount they want to top up, ensuring it is greater than $0.00
+                                decimal_places=2, # Ensures the amount entered is to 2 decimal places
+                                max_digits=5, # Ensures the amount entered is to 5 digits
+                                error_messages={ # Provides error messages to the user based on what they have entered
                                     'min_value': "Please enter an amount greater than $0.00.",
-                                    'invalid': "Enter a valid amount in dollars and cents."},
-                                label="Amount to Top-Up")
+                                    'invalid': "Enter a valid amount in dollars and cents."}, 
+                                label="Amount to Top-Up") # Sets the label for the field
 
-    class Meta:
+    class Meta: # Sets the model and fields for the form
         model = Transaction
         fields = ['amount']
