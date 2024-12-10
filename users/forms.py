@@ -28,7 +28,7 @@ class UserRegistrationForm(UserCreationForm):
         return user
 
 class TopUpForm(forms.Form):
-    amount = forms.DecimalField(min_value=0.01, # Creates the field for the user to enter the amount they want to top up, ensuring it is greater than $0.00
+    amount = forms.DecimalField(min_value=1.00, # Creates the field for the user to enter the amount they want to top up, ensuring it is at least $1.00
                                 decimal_places=2, # Ensures the amount entered is to 2 decimal places
                                 max_digits=5, # Ensures the amount entered is to 5 digits
                                 error_messages={ # Provides error messages to the user based on what they have entered
